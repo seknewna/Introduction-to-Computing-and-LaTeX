@@ -1,0 +1,134 @@
+---
+title: "01 - Operators"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+R can act as a calculator directly from the console — every operator below
+can be typed and evaluated on the spot.
+
+# Arithmetic Operators
+
+### Addition: `+`
+```{r}
+1 + 1
+```
+
+### Subtraction: `-`
+```{r}
+1 - 1
+```
+
+### Multiplication: `*`
+```{r}
+1 * 1
+```
+
+### Division: `/`
+```{r}
+1 / 1
+```
+
+### Modulus (remainder of a division): `%%`
+```{r}
+1 %% 2
+```
+
+### Exponent: `^` or `**`
+```{r}
+2 ^ 10 # or 2 ** 10
+```
+
+### Integer division: `%/%`
+```{r}
+1035 %/% 3
+```
+
+# Logical Operators
+
+### Less than: `<`
+```{r}
+1 < 1
+```
+
+### Less than or equal to: `<=`
+```{r}
+1 <= 1
+```
+
+### Greater than: `>`
+```{r}
+1 > 1
+```
+
+### Greater than or equal to: `>=`
+```{r}
+1 >= 1
+```
+
+### Exactly equal to: `==`
+```{r}
+"R" == "r"
+```
+
+R is case-sensitive — `"R"` and `"r"` are different values.
+
+The equality operator can also compare one element against several at once:
+```{r}
+"Species" == c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width", "Species")
+```
+
+### Not equal to: `!=`
+```{r}
+1 != 1
+```
+
+### Negation / NOT: `!`
+Flips `TRUE` to `FALSE` and vice versa.
+```{r}
+!TRUE  # or !T
+!FALSE # or !F
+
+!(TRUE & FALSE) # this is TRUE
+!(FALSE | TRUE) # this is FALSE
+```
+
+### AND: `&`
+```{r}
+TRUE & TRUE
+TRUE & FALSE
+FALSE & FALSE
+```
+
+### OR: `|`
+```{r}
+TRUE | TRUE
+TRUE | FALSE
+FALSE | FALSE
+```
+
+## Value Matching
+
+`match()` returns the position of the first match of its first argument in
+its second argument. Check `?match` for the full documentation.
+```{r}
+match("Species", c("Sepal.Length", "Sepal.Width", "Petal.Length",
+                    "Petal.Width", "Species"))
+```
+
+`%in%` checks whether a value exists anywhere in a vector, returning
+`TRUE`/`FALSE` instead of a position:
+```{r}
+"Species" %in% c("Sepal.Length", "Sepal.Width", "Petal.Length",
+                  "Petal.Width", "Species")
+```

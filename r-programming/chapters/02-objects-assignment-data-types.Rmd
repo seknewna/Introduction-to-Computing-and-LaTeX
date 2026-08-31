@@ -1,0 +1,178 @@
+---
+title: "02 - R Objects, Assignment & Data Types"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment
+
+R accepts three assignment operators: `<-`, `=`, and `->`.
+
+A variable name:
+
+* can begin with a letter or a dot. E.g. `a <- 1`, `0 -> .a`
+* cannot contain spaces — use `_` or `.` instead
+* can contain numbers, just not as the first character. E.g. `a1 <- 1`
+
+```{r error=TRUE}
+v rsion <- 4.3.2 # invalid: a space inside the name breaks the parser
+```
+
+```{r}
+a <- 1
+b <- 2
+0 -> .a
+a1 <- .a
+```
+
+# Data Types
+
+R has these core data types: numeric, integer, complex, character, logical,
+raw, and factor.
+
+## Numeric / double
+Examples: `10.5`, `55`, `787`, `pi`.
+```{r}
+PI <- pi; class(PI); typeof(PI)
+n <- 55; class(n); typeof(n)
+```
+
+## Integer
+Append `L` to a literal to declare it as an integer (`1L`, `55L`, `100L`).
+```{r}
+n <- 55L
+class(n)
+```
+
+## Complex
+An example of a complex number is $9 + 3i$, where $i$ is the imaginary part.
+Multiplying a real number by `1i` converts it to complex.
+```{r}
+z <- 9 + 3i
+class(z)
+typeof(z)
+
+z1 <- a + 1i * b
+print(z1)
+class(z1)
+```
+
+## Character / string
+```{r}
+string <- "I am Learning R"
+class(string)
+```
+Remember: `"LeaRning"` is different from `"Learning"` — R is case-sensitive.
+
+## Logical / Boolean
+```{r}
+TRUE  # or T
+FALSE # or F
+```
+A logical value is often the *result* of a test:
+```{r}
+"LeaRning" == "Learning"
+```
+
+## Raw
+```{r}
+text <- "I am learning R."
+(raw_text <- charToRaw(text))
+class(raw_text)
+```
+Converting raw back to text:
+```{r}
+rawToChar(raw_text)
+```
+
+## Factors
+Factors represent qualitative/categorical data — colors, pass/fail, movie
+ratings — and are the backbone of statistical modeling in R.
+```{r}
+Gender <- factor(c("Female", "Male"))
+print(Gender)
+class(Gender)
+```
+
+## Logical, revisited
+```{r}
+v <- TRUE
+w <- FALSE
+
+class(v); typeof(v)
+!v
+
+isTRUE(w)
+```
+
+## Creating objects directly
+
+Numeric:
+```{r}
+n <- 10
+x <- numeric(n) # a numeric vector of length n, filled with zeros
+print(x)
+
+x[1] <- 2.5
+print(x)
+```
+
+Integer — note that assigning a decimal silently upgrades it to numeric:
+```{r}
+n <- 10
+x <- integer(n)
+print(x)
+class(x)
+
+x[1] <- 2.5 # R converts the whole vector to numeric
+class(x)
+print(x)
+```
+
+## Conversions
+
+To convert between data types, use one of the `as.*()` functions from base
+R. The naming convention is `as.` followed by the target type.
+
+* Numeric to character
+```{r}
+n <- 55
+n_char <- as.character(n)
+print(n_char); class(n_char)
+```
+
+* Character to numeric
+```{r}
+s <- "123"
+s_num <- as.numeric(s)
+print(s_num); class(s_num)
+```
+A string that isn't a valid number becomes `NA` (with a warning) rather
+than causing an error:
+```{r}
+suppressWarnings(as.numeric("abc"))
+```
+
+* Factor to character
+```{r}
+f <- factor(c("low", "high", "medium"))
+f_char <- as.character(f)
+print(f_char); class(f_char)
+```
+
+* Character to factor
+```{r}
+level <- "medium"
+level_fct <- as.factor(level)
+print(level_fct); class(level_fct)
+```

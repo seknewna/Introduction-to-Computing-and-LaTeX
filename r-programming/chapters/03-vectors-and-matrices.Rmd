@@ -1,0 +1,279 @@
+---
+title: "03 - Data Structures I: Vectors & Matrices"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+R's most-used data structures are vectors, matrices, arrays, lists, factors,
+and data frames. This chapter covers the first two.
+
+# Scalars and Vectors (1D)
+
+A scalar is any single number; a vector is a collection of values of the
+same type (and can represent a sequence).
+
+Mixing types inside `c()` forces R to coerce everything to one common type:
+```{r}
+v <- c(1, "R", TRUE, FALSE, NA)
+print(v)
+class(v) # everything becomes character (NA is compatible with any type)
+```
+
+```{r}
+v2 <- c(1, 4, 8, FALSE, TRUE, FALSE, FALSE, TRUE, "R" == "r")
+print(v2)
+class(v2) # everything becomes numeric: FALSE -> 0, TRUE -> 1
+```
+
+## Sequences with `seq()`
+```{r}
+x <- seq(0, 2 * pi, length.out = 90)
+length(x)
+unique(round(diff(x), 5)) # the common step size
+
+head(x, 5); tail(x)
+range(x)
+```
+
+```{r}
+diff(c(4, 6))
+diff(range(x)) # same as max(x) - min(x)
+```
+
+Indexing with a non-integer floors to the nearest integer:
+```{r}
+x[11.8] == x[11]
+as.integer(9.123486785) # what R does internally with a fractional index
+```
+
+The length of a vector:
+```{r}
+length(x)
+a <- 9
+length(a) # a scalar is just a vector of length 1
+```
+
+## Repetition with `rep()`
+```{r}
+rep("I learn R", 3)
+rep(c(0, 1), 5)
+rep(c(0:1), c(3, 3))
+rep(c(0:1), each = 3)
+```
+
+## Random sampling
+```{r}
+set.seed(123) # fixes the randomness for reproducibility
+y <- sample(0:1, size = 200, replace = TRUE, prob = c(1/3, 1 - 1/3))
+sum(y == 0)   # count of zeros
+sum(y == 1)   # count of ones
+```
+
+`table()` counts occurrences for you:
+```{r}
+table(y)
+```
+
+`prop.table()` converts counts to proportions:
+```{r}
+prop.table(table(y))
+mean(y == 0) # a shortcut: mean() of a logical vector is a proportion
+```
+
+## A small survey example
+
+```{r}
+Gender <- c("Female", "Male", "Male", "Male", "Female", "Female", "Male",
+"Male", "Female", "Female", "Male", "Male", "Male", "Male", "Female",
+"Female", "Male", "Female", "Female", "Male", "Female", "Male",
+"Male", "Male", "Male", "Female", "Femaale", "Male", "Female",
+"Male", "Male", "Female", "Male", "Female", "Malle", "Male", "Female",
+"Female", "Femmale", "Female", "Female", "Female", "Female", "Male",
+"Male", "Male", "Male")
+
+sum(Gender == "Female")
+mean(Gender == "Female")
+table(Gender) # note the 3 misspelled entries
+```
+
+Cleaning up the typos:
+```{r}
+Gender[Gender == "Femaale"] <- "Female"
+Gender[Gender == "Femmale"] <- "Female"
+Gender[Gender == "Malle"]   <- "Male"
+table(Gender)
+```
+
+Sub-setting with `sample()`:
+```{r}
+set.seed(76)
+table(sample(Gender, size = 20))
+```
+
+## Vector arithmetic
+```{r}
+k <- 2
+v <- c(1, 0, 3)
+
+k + v; v + k
+k - v; v - k
+k * v; v * k
+v / k
+k / v
+```
+
+```{r}
+k <- 1/2
+v <- c(pi, 0, 1, 4)
+w <- c(0, pi, pi, 0, 0)
+
+k * v; v * k
+v ^ k
+v + w
+```
+
+# Matrices (2D)
+
+```{r}
+(A <- matrix(1:25, ncol = 5, nrow = 5)) # column-major fill by default
+(B <- matrix(1:25, nrow = 5, ncol = 5, byrow = TRUE))
+```
+
+## Building a matrix by hand
+```{r}
+v <- c(1, rep(0, 2), 1, 0, rep(1, 3), rep(0, 2), rep(1, 2))
+A <- matrix(v, 3, byrow = TRUE)
+print(A)
+dim(A)
+```
+
+The same result using `dim<-`:
+```{r}
+v <- c(1, rep(0, 2), 1, 0, rep(1, 3), rep(0, 2), rep(1, 2))
+dim(v) <- c(4, 3)
+v <- t(v)
+v
+```
+
+A zero matrix:
+```{r}
+n <- 6; p <- 8
+matrix(0, nrow = n, ncol = p)
+```
+
+```{r}
+(A <- matrix(c(1, 0, 2, 5, 2, 1, 4, 2, 0), nrow = 3))
+(B <- matrix(c(2, 5, 2, 3, 1, 1, 0, 1, 1), nrow = 3))
+```
+
+## Matrices from vectors: `cbind` / `rbind`
+```{r}
+v1 <- c(1, 0, 2); v2 <- c(5, 2, 1); v3 <- c(4, 2, 0)
+(M1 <- cbind(v1, v2, v3))
+(M2 <- rbind(v1, v2, v3))
+```
+
+## Matrix operations
+
+Transpose:
+```{r}
+(A_T <- t(A))
+```
+
+Addition / subtraction:
+```{r}
+A + B
+A - B
+```
+
+Multiplication (`%*%`, not `*`):
+```{r}
+ncol(A) == nrow(B)
+A %*% B
+```
+
+Inverse:
+```{r}
+(A_inv <- solve(A))
+round(A %*% A_inv) # sanity check: should be the identity matrix
+```
+
+## Solving a system of equations
+
+$$
+\begin{cases}
+2x + 2y &= 0\\
+x + 3y &= 2
+\end{cases}
+$$
+
+```{r}
+A1 <- matrix(c(2, 2, 1, 3), nrow = 2, byrow = TRUE)
+b <- c(0, 2)
+solve(A1, b)
+```
+
+## Eigenvalues / eigenvectors
+
+Eigenvalues $\lambda$ of a square matrix $A$ solve the characteristic
+equation $\det(A - \lambda I_n) = 0$. They're the mathematical basis of
+[Principal Component Analysis](https://www.datacamp.com/tutorial/pca-analysis-r),
+covered in Chapter 15.
+
+```{r}
+ev <- eigen(A)
+print(ev$values)
+
+P <- ev$vectors
+round(solve(P) %*% A %*% P, 4) # recovers a diagonal matrix of eigenvalues
+```
+
+## Worked exercise: manual PCA on `iris`
+
+1. Remove the last column (`Species`) from `iris`:
+```{r}
+data(iris)
+dta <- iris[, -5]
+```
+
+2. Compute the average of each remaining column:
+```{r}
+avg <- colMeans(dta)
+print(avg)
+```
+
+3. Center the data by subtracting each column's average:
+```{r}
+scaled_dta <- scale(dta, center = TRUE, scale = FALSE)
+head(scaled_dta, 3)
+```
+
+4. Eigen-decompose `t(scaled_dta) %*% scaled_dta`:
+```{r}
+cov_mat <- t(scaled_dta) %*% scaled_dta
+ev <- eigen(cov_mat)
+ev$values
+```
+
+5. Project onto the first two eigenvectors:
+```{r}
+P <- ev$vectors[, 1:2]
+projection <- scaled_dta %*% P
+head(projection)
+```
+
+This is exactly what `prcomp()` does under the hood:
+```{r}
+pca <- prcomp(dta, center = TRUE, scale. = FALSE)
+head(pca$x[, 1:2])
+```

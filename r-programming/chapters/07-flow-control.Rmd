@@ -1,0 +1,223 @@
+---
+title: "07 - Flow Control: Conditionals & Loops"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# `if` / `else`
+
+```
+if (condition) {
+  ## code to run
+}
+```
+
+```{r}
+x <- 3
+if (x < 4) {
+  print(TRUE)
+} else {
+  print(FALSE)
+}
+
+# one-liner form
+if (x < 4) print(TRUE) else print(FALSE)
+
+# vectorized form: ifelse() works element-by-element on a whole vector
+x <- c(3, 4, 6, 7, 0, 4)
+ifelse(x < 4, TRUE, FALSE)
+```
+
+## Nested conditions: grading example
+
+```{r}
+set.seed(123)
+marks <- round(rnorm(50, mean = 60, sd = 15), 2)
+```
+
+Categorize each mark: Fail [0-60), Pass [60-70), Good Pass [70-80),
+Very Good Pass [80-85), Distinction [85+].
+
+**Approach 1 — iterate over values directly:**
+```{r}
+category <- character(0)
+for (m in marks) {
+  if (m >= 0 & m < 60) {
+    category <- c(category, "Fail")
+  } else if (m >= 60 & m < 70) {
+    category <- c(category, "Pass")
+  } else if (m >= 70 & m < 80) {
+    category <- c(category, "Good Pass")
+  } else if (m >= 80 & m < 85) {
+    category <- c(category, "Very Good Pass")
+  } else {
+    category <- c(category, "Distinction")
+  }
+}
+head(df_marks <- data.frame(marks, category), 5)
+```
+
+**Approach 2 — iterate over indices:**
+```{r}
+category2 <- character()
+for (i in seq_along(marks)) {
+  if (marks[i] >= 0 & marks[i] < 60) {
+    category2[i] <- "F"
+  } else if (marks[i] >= 60 & marks[i] < 70) {
+    category2[i] <- "P"
+  } else if (marks[i] >= 70 & marks[i] < 80) {
+    category2[i] <- "GP"
+  } else if (marks[i] >= 80 & marks[i] < 85) {
+    category2[i] <- "VGP"
+  } else {
+    category2[i] <- "D"
+  }
+}
+df_marks$category2 <- category2
+head(df_marks, 5)
+```
+
+**Approach 3 — vectorized with nested `ifelse()`:**
+```{r}
+category3 <- ifelse(marks < 60, "Fail",
+              ifelse(marks < 70, "Pass",
+               ifelse(marks < 80, "Good Pass",
+                ifelse(marks < 85, "Very Good Pass", "Distinction"))))
+all(df_marks$category == category3)
+```
+
+# `for` Loops
+
+```{r}
+m <- 10
+for (i in 1:m) print(i)
+```
+
+```{r}
+for (i in 1:10) {
+  if (i %% 3 == 0) {
+    cat(i, "is a multiple of 3\n")
+  } else if (i %% 2 == 0) {
+    cat(i, "is a multiple of 2\n")
+  } else {
+    cat(i, "is neither a multiple of 2 nor 3\n")
+  }
+}
+```
+
+## Exercise 1: odd or even
+
+```{r}
+for (i in 1:10) {
+  if (i %% 2 == 0) {
+    cat(i, "is even\n")
+  } else {
+    cat(i, "is odd\n")
+  }
+}
+```
+
+## Exercise 2: importing every CSV in a folder
+
+Build the file path from parts using `paste()`/`paste0()`:
+```{r}
+paste("data", "csv", sep = "/")
+paste0("data", "/", "csv")
+```
+
+List every CSV in a folder, then load them all into one list:
+```{r}
+dir.create("demo_csv", showWarnings = FALSE)
+write.csv(head(iris, 3), "demo_csv/iris_part.csv", row.names = FALSE)
+write.csv(head(mtcars, 3), "demo_csv/mtcars_part.csv", row.names = FALSE)
+
+file_names <- dir("demo_csv", pattern = "\\.csv$", full.names = TRUE)
+file_names
+
+data_list <- list()
+for (f in file_names) {
+  data_list[[basename(f)]] <- read.csv(f)
+}
+str(data_list)
+unlink("demo_csv", recursive = TRUE) # clean up the demo files
+```
+
+# `while` Loops
+
+```
+while (condition) {
+  ## code to run
+  ## something that eventually makes condition FALSE
+}
+```
+
+```{r}
+i <- 0
+while (i <= 10) {
+  print(i * 2)
+  i <- i + 10
+}
+```
+
+## Exercise: dice streak game
+
+Print "YOU WON!" the moment three 5s are rolled in a row.
+```{r}
+set.seed(42)
+streak <- 0
+rolls <- 0
+repeat {
+  rolls <- rolls + 1
+  roll <- sample(1:6, 1)
+  streak <- if (roll == 5) streak + 1 else 0
+  if (streak == 3) {
+    cat("YOU WON! (after", rolls, "rolls)\n")
+    break
+  }
+}
+```
+
+## Exercise: interactive multiplication table
+
+This one needs a live console, since `readline()` only works in an
+interactive R session (not when a script is run non-interactively):
+```{r eval=FALSE}
+repeat {
+  number <- as.numeric(readline(prompt = "Enter a number 0-9: "))
+  cat(number, "x 2 table:\n")
+  for (i in 1:10) cat(number, "x", i, "=", number * i, "\n")
+
+  again <- readline(prompt = "Continue? (y/n): ")
+  if (tolower(again) != "y") break
+}
+```
+
+# `repeat`
+
+```
+i <- 0
+repeat {
+  ## code to run
+  i <- i + 1
+  if (something_happens) break
+}
+```
+
+```{r}
+i <- 0
+repeat {
+  print(i)
+  i <- i + 1
+  if (i > 5) break
+}
+```

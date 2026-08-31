@@ -1,0 +1,61 @@
+---
+title: "00 - Getting Started with R"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## What is R?
+
+R is a statistical programming language created in 1992 by Ross Ihaka and
+Robert Gentleman at the University of Auckland, New Zealand, and first
+released as version 1.0 in February 2000. Its name comes from the initials
+of its creators' first names. R descends from the S language, which was
+developed at Bell Laboratories in the mid-1970s. See the
+[official R project page](https://www.r-project.org/about.html) for more
+history.
+
+## Install R
+
+Download the build for your operating system from CRAN:
+
+* [Windows](https://cloud.r-project.org/bin/windows/base/)
+* [macOS](https://cloud.r-project.org/bin/macosx/)
+* [Linux (Debian, Fedora/Red Hat, Ubuntu)](https://cloud.r-project.org/bin/linux/)
+
+## Install RStudio
+
+RStudio (now Posit) is the IDE most R users work in day to day. Download it
+from [posit.co/download/rstudio-desktop](https://posit.co/download/rstudio-desktop/),
+or use [Posit Cloud](https://posit.cloud/) to run RStudio entirely in a
+browser with no install at all.
+
+## Setting up R Markdown
+
+### Required packages
+
+* **tinytex** — a lightweight LaTeX distribution needed to render R Markdown
+  documents to PDF.
+
+```{r eval=FALSE}
+if (!"tinytex" %in% rownames(installed.packages())) {
+  install.packages("tinytex")
+}
+library(tinytex)
+install_tinytex() # installs LaTeX itself
+```
+
+* **Rtools** (Windows only) — needed to build packages from source. Download
+  from [cran.r-project.org/bin/windows/Rtools](https://cran.r-project.org/bin/windows/Rtools/).
+
+Once these are installed, R Markdown (`.Rmd`) files like the ones in this
+course can render to HTML, Word, or PDF directly from RStudio's Knit button.

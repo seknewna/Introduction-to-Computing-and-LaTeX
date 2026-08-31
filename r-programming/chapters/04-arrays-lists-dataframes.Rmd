@@ -1,0 +1,116 @@
+---
+title: "04 - Data Structures II: Arrays, Lists & Data Frames"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Arrays
+
+Arrays generalize matrices to more than two dimensions.
+```{r}
+(aRray <- array(1:24, dim = c(3, 4, 2)))
+class(aRray)
+```
+
+A classic use case is gridded (NetCDF-style) data: longitude as columns,
+latitude as rows, and time as the third dimension — each time slice being
+its own row x column matrix.
+```{r}
+dim(aRray)
+aRray[1, 1, 2] # row 1, column 1, of the 2nd matrix "slice"
+```
+
+# Lists
+
+A list holds objects of different types and sizes together.
+```{r}
+L <- list()
+A <- matrix(0, 5, 6)
+
+L$A <- A
+L$my_seq <- sample(10, 5)
+L$Bool <- TRUE
+L[["iris_head"]] <- head(iris, 3)
+length(L)
+
+L[[5]] <- "I am learning R"
+names(L)
+names(L)[5] <- "String"
+names(L)
+```
+
+```{r}
+mylist <- list("matrix" = A,
+               "sequence" = 1:5,
+               "Bool" = TRUE)
+mylist$matrix
+class(mylist[[1]])
+mylist[c("matrix", "Bool")]
+```
+
+# Data Frames
+
+A data frame is a table of $n$ rows (observations) by $p$ columns
+(variables), where each column can hold a different data type.
+
+## Converting a continuous variable into categories
+```{r}
+set.seed(123)
+n <- 120
+df <- data.frame(
+  "ID"  = paste0("Particip_", 1:n),
+  "age" = sample(0:120, size = n)
+)
+head(df, 5)
+```
+
+```{r}
+brks <- seq(0, 120, by = 10)
+df$age_groups <- cut(df$age, breaks = brks, include.lowest = TRUE)
+head(df, 5)
+```
+
+## Exercise: summarizing the age groups
+
+1. Counts by age group:
+```{r}
+(counts <- table(df$age_groups))
+```
+
+2. A barplot of the age groups:
+```{r fig.height=4, fig.width=7}
+x <- barplot(counts, col = "purple", main = "Distribution of ages", xaxt = "n")
+text(x = x, y = -1.5, cex = 0.8, xpd = TRUE, srt = 45, labels = names(counts))
+```
+
+3. A histogram of raw ages:
+```{r fig.height=4, fig.width=7}
+hist(df$age, main = "Histogram of ages", xlab = "age", col = "pink", breaks = 12)
+```
+
+4. IDs of participants in the (70, 80] age group:
+```{r}
+df$ID[df$age_groups == "(70,80]"]
+```
+
+```{r}
+l <- split(df, df$age_groups)
+names(l)
+l$`(70,80]`$ID
+```
+
+## Creating a data frame directly
+```{r}
+df2 <- data.frame(x = rnorm(10), y = rpois(10, 2))
+head(df2, 3)
+```

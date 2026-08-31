@@ -1,0 +1,88 @@
+---
+title: "08 - The Apply Family of Functions"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The `apply` family replaces explicit loops when you want to run the same
+function across rows, columns, or elements of a data structure.
+
+# `apply()`
+
+Applies a function across the margins (rows or columns) of a matrix.
+```{r}
+A <- matrix(1:4, nrow = 2)
+A
+
+avg <- function(x) sum(x) / length(x)
+avg(1:10)
+```
+
+```{r}
+apply(iris[-5], MARGIN = 2, summary) # MARGIN = 2 means "column-wise"
+```
+
+# `sapply()`
+
+Like `apply()`, but works over vectors/lists and simplifies the result to
+a vector or matrix where possible.
+```{r}
+sapply(A, sum) # does not respect matrix structure — flattens first
+```
+
+```{r}
+coef_disp <- function(x) sd(x) / mean(x)
+get_range  <- function(x) diff(range(x))
+
+sapply(Filter(is.numeric, iris), get_range)
+
+sapply(Filter(is.numeric, iris), function(x) c(
+  min = min(x), max = max(x), std_dev = sd(x),
+  Q1 = quantile(x, 0.25), Med = quantile(x, 0.5), Q3 = quantile(x, 0.75),
+  disp = coef_disp(x)
+))
+```
+
+`sapply()` falls back to returning a list when results aren't the same
+length:
+```{r}
+sapply(iris, summary)
+```
+
+```{r}
+sapply(1:10, function(x) x^2)
+```
+
+# `lapply()`
+
+Always returns a list, one element per input element:
+```{r}
+a <- lapply(iris[-5], mean)
+unlist(a)
+```
+
+# `tapply()`
+
+Applies a function to subgroups of a vector, split by a factor:
+```{r}
+tapply(iris$Sepal.Length, iris$Species, mean)
+```
+
+# `vapply()`
+
+Like `sapply()`, but requires you to specify the expected output shape —
+safer for use inside functions/packages since it fails loudly on a mismatch:
+```{r}
+vapply(as.list(iris[-5]), quantile,
+       FUN.VALUE = c("0%" = 0, "25%" = 0, "50%" = 0, "75%" = 0, "100%" = 0))
+```

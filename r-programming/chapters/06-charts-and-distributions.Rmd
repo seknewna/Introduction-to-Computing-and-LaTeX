@@ -1,0 +1,191 @@
+---
+title: "06 - Charts & Distribution Simulations"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Base R Charts
+
+## Bar chart
+```{r fig.height=4, fig.width=7}
+frequencies <- c(Female = 35, Children = 25, Male = 40)
+barplot(frequencies, cex.names = 0.8,
+        names.arg = names(frequencies),
+        col = c("purple", "salmon", "pink"))
+```
+`cex.names` shrinks the axis labels; lower it further if labels get cut off.
+
+## Pie chart
+```{r fig.height=4, fig.width=8}
+par(mfrow = c(1, 2))
+pie(frequencies, cex = 0.8,
+    labels = paste0(names(frequencies), " (", frequencies, ")"),
+    col = c("purple", "salmon", "pink"))
+pie(frequencies, cex = 0.8,
+    labels = paste0(names(frequencies), " (", frequencies, ")"),
+    col = rainbow(length(frequencies)))
+```
+
+## Histograms and density
+```{r fig.height=4, fig.width=8}
+set.seed(12092024)
+x <- sample(1:120, size = 1000, replace = TRUE)
+par(mfrow = c(1, 2))
+hist(x, probability = TRUE) # densities instead of raw counts
+plot(density(x), col = "salmon", main = "density of x")
+```
+
+```{r fig.height=4, fig.width=6}
+with(iris, hist(Sepal.Length, probability = TRUE))
+lines(density(iris$Sepal.Length), col = "red")
+```
+
+## Scatter plot
+```{r fig.height=4, fig.width=6}
+x <- seq(0, 2 * pi, length.out = 50)
+y <- sin(x)
+plot(x, y, pch = 16, col = "blue")
+```
+
+**Exercise:** scatter plot of `Petal.Length` vs `Petal.Width`, colored by
+species, with a fitted regression line.
+```{r fig.height=4, fig.width=6}
+f <- Petal.Length ~ Petal.Width
+lr <- lm(f, data = iris)
+plot(f, data = iris, col = iris$Species, pch = 16)
+abline(lr, col = "blue", lwd = 2, lty = 3)
+legend("topleft", legend = unique(iris$Species),
+       col = unique(iris$Species), pch = 16, bty = "n")
+```
+
+# Distribution Simulations
+
+## Uniform distribution
+
+$$
+f_X(x) = \begin{cases} \frac{1}{b-a} & \text{if } x \in[a, b] \\
+0 & \text{else}\end{cases}
+$$
+
+```{r fig.height=4, fig.width=6}
+set.seed(123)
+x <- runif(1000)
+hist(x, probability = TRUE, xlab = NULL,
+     main = "Histogram of a uniform distribution", col = "turquoise")
+lines(density(x), col = "red", lwd = 2, lty = 3)
+abline(v = mean(x), col = "blue", lty = 2, lwd = 2)
+legend("topleft", lty = c(2, 2), col = c("red", "blue"),
+       legend = c("Density", "Average"))
+```
+
+Testing whether a sample looks uniform vs. normal:
+```{r fig.height=4, fig.width=5}
+ks.test(x, "punif") # p > 0.05 supports "looks uniform"
+qqnorm(x)
+qqline(x, col = "red")
+```
+
+## Binomial distribution
+
+$$
+P(X = k) = {n \choose k}p^k(1-p)^{n-k}
+$$
+
+```{r fig.height=4, fig.width=8}
+rbinom_dist <- rbinom(n = 10000, size = 1, prob = 0.3)
+par(mfrow = c(1, 2))
+pie(table(rbinom_dist))
+barplot(table(rbinom_dist))
+```
+A histogram isn't well suited to discrete data like this — bar/pie charts
+work better.
+
+## Gaussian (normal) distribution
+
+$$
+f_X(x) = \frac{1}{\sigma\sqrt{2\pi}}\exp\left\{-\frac{1}{2\sigma^2}(x-\mu)^2\right\}
+$$
+
+```{r fig.height=4, fig.width=6}
+set.seed(13092024)
+gauss_dist <- rnorm(1000, mean = 0, sd = 1)
+hist(gauss_dist, probability = TRUE, breaks = 30, xlab = NULL,
+     main = "Histogram of a standard normal distribution", col = "turquoise")
+lines(density(gauss_dist), col = "red", lwd = 2, lty = 2)
+abline(v = mean(gauss_dist), col = "blue", lty = 2, lwd = 2)
+```
+
+```{r}
+mean(gauss_dist)
+sd(gauss_dist)
+```
+
+## Simulating a linear relationship
+
+$$y_i = \alpha + \beta x_i + \varepsilon_i,\quad \varepsilon_i \sim \mathcal{N}(0,1)$$
+
+```{r}
+set.seed(123)
+x <- rnorm(1000, mean = 5, sd = 1.5)
+error_term <- rnorm(1000)
+z <- 4 + 8 * x + error_term # true relationship, known only because we simulated it
+
+df <- data.frame(x, z)
+head(df, 5)
+```
+
+Fitting a simple linear model:
+```{r fig.height=5, fig.width=7}
+LR <- lm(z ~ x, data = df)
+coefs <- coefficients(LR)
+summary(LR)
+
+par(mfrow = c(2, 2))
+plot(LR) # standard diagnostic plots
+```
+
+Estimated model: $\hat{y} =$ `r round(coefs[[1]], 2)` + `r round(coefs[[2]], 2)`
+$x$. Predicting for a new value, $x = 15$:
+```{r}
+new_data <- data.frame(x = 15)
+(new_data$predicted <- predict(object = LR, newdata = new_data))
+```
+
+```{r fig.height=4, fig.width=6}
+plot(predicted ~ x, data = new_data, col = "darkgreen", xlim = c(0, 15),
+     ylim = c(0, new_data$predicted), pch = 16, ylab = "z")
+points(z ~ x, data = df, col = "darkorange", pch = 20)
+abline(LR, col = "blue")
+legend("topleft", c("Actual", "Predicted"),
+       col = c("darkorange", "darkgreen"), pch = c(20, 16), bty = "n")
+```
+
+## Exponential distribution
+```{r fig.height=4, fig.width=6}
+set.seed(13092024)
+exp_dist <- rexp(1000, rate = 1)
+hist(exp_dist, probability = TRUE, xlab = NULL,
+     main = "Histogram of exponential distribution", col = "turquoise")
+lines(density(exp_dist), col = "red", lwd = 2, lty = 2)
+abline(v = mean(exp_dist), col = "blue", lty = 2, lwd = 2)
+```
+
+## Poisson distribution
+```{r fig.height=4, fig.width=6}
+set.seed(13092024)
+pois_dist <- rpois(1000, lambda = 2.5)
+hist(pois_dist, probability = TRUE, main = "Histogram of Poisson distribution",
+     col = "turquoise", xlab = NULL)
+lines(density(pois_dist), col = "red", lwd = 2, lty = 2)
+abline(v = mean(pois_dist), col = "blue", lty = 2, lwd = 2)
+```

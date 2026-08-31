@@ -1,0 +1,128 @@
+---
+title: "12 - The Pipe & Data Manipulation"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# The Pipe
+
+Two pipe operators are common in R:
+
+* `%>%` from the `magrittr` package (loaded with `tidyverse`/`dplyr`)
+* `|>` the base-R native pipe
+
+RStudio shortcut: **Ctrl+Shift+M**.
+
+Why bother? Because `f(g(h(x)))` reads inside-out, while
+`x %>% h() %>% g() %>% f()` reads left to right, in the order things
+actually happen.
+
+```{r message=FALSE}
+library(dplyr)
+library(ggplot2)
+
+iris %>% group_by(Species) %>%
+  summarise(mean = mean(Petal.Width), .groups = "drop")
+
+Gender <- factor(c("Female", "Male", "Male", "Female", "Female", "Male"))
+
+Gender %>% table() %>% data.frame() %>%
+  rename("Gender" = 1, Count = Freq) %>%
+  mutate(Rel_freq = round(Count / sum(Count), 2)) %>%
+  ggplot(aes(x = Gender, y = Rel_freq)) + geom_col()
+```
+
+Without the pipe, the same computation nests inside-out:
+```{r}
+summarise(group_by(iris, Species), mean = mean(Petal.Width))
+```
+
+# Data Manipulation with `tidyverse`
+
+Loading `tidyverse` pulls in several packages at once: `ggplot2`, `tibble`,
+`tidyr`, `readr`, `purrr`, `dplyr`, `stringr`, `forcats`, and `lubridate`.
+There's no need to load each individually afterward.
+
+## `dplyr`
+
+Grammar-based data manipulation — see Chapter 10 for the core verbs
+(`select`, `filter`, `arrange`, `rename`, `mutate`, `summarise`).
+
+## `tibble`
+
+A tibble is a modernized data frame: cleaner printing, no silent partial
+matching, and no automatic factor conversion.
+```{r}
+library(tibble)
+tb <- as_tibble(iris)
+tb
+glimpse(tb)
+```
+
+## `reshape2`
+
+Reshaping data between wide and long formats:
+```{r message=FALSE, fig.height=3, fig.width=8}
+library(reshape2)
+library(tidyr)
+
+view1 <- iris %>% group_by(Species) %>%
+  summarise_if(is.numeric, list(mean = mean, sd = sd)) %>%
+  melt(id.vars = "Species") %>%
+  separate(variable, into = c("variable", "metric"), sep = "_")
+
+view1
+```
+
+Pivoting back to wide format with `tidyr::pivot_wider()`:
+```{r}
+view2 <- view1 %>%
+  pivot_wider(names_from = metric, values_from = value) %>%
+  mutate(std_error = sd / sqrt(nrow(iris)))
+view2
+```
+
+```{r fig.height=4, fig.width=8}
+view2 %>% ggplot() +
+  geom_bar(aes(x = Species, y = mean), stat = "identity", fill = "forestgreen", alpha = 0.5) +
+  geom_errorbar(aes(x = Species, ymin = mean - std_error, ymax = mean + std_error),
+                width = 0.4, colour = "orange", alpha = 0.9, linewidth = 0.5) +
+  facet_wrap(~variable, ncol = 4)
+```
+
+# Presenting Tables
+
+## `kableExtra`
+Great for styling `knitr::kable()` tables in HTML/PDF reports — see the
+[kableExtra cookbook chapter](https://bookdown.org/yihui/rmarkdown-cookbook/kableextra.html).
+
+## `flextable`
+Produces polished tables that also render well in Word documents:
+```{r message=FALSE, warning=FALSE}
+library(broom)
+library(flextable)
+
+set.seed(123)
+x <- rnorm(100, mean = 5, sd = 1.5)
+z <- 4 + 8 * x + rnorm(100)
+LR <- lm(z ~ x)
+
+tidy(LR) %>% select(-statistic) %>% flextable() %>% autofit() %>% theme_box()
+```
+
+See the [Epi R Handbook tables chapter](https://epirhandbook.com/en/new_pages/tables_presentation.html)
+for more `flextable` recipes.
+
+## `officer`
+Generates and edits Word/PowerPoint files directly from R — see the
+[officeverse guide](https://ardata-fr.github.io/officeverse/) for details.

@@ -1,0 +1,108 @@
+---
+title: "05 - Data Cleaning: Missing Values & Outliers"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Missing Values (`NA`)
+
+```{r}
+x <- c(NA, 1, 2, NA, 3, NA, 3.55)
+which(is.na(x))  # which positions are missing
+which(x >= 2)    # which positions are >= 2 (NAs drop out silently)
+which(!is.na(x)) # which positions are NOT missing
+```
+
+Replacing missing values with the mean of the non-missing ones:
+```{r}
+x[is.na(x)] <- mean(x, na.rm = TRUE)
+print(x)
+```
+
+## NAs introduced by coercion
+
+Converting a messy character vector straight to numeric turns anything
+non-numeric into `NA`:
+```{r}
+x <- c("2", "1", "2", "7", "$8", "3", "2.5", "9", "2,7")
+y <- suppressWarnings(as.numeric(x))
+print(y)
+
+id <- which(is.na(y))
+id
+```
+
+Cleaning the offending values with `gsub()` before converting:
+```{r}
+x <- c("2", "1", "2", ",7", "$8", "3", "&2.5", "9", "2,7")
+x <- gsub("\\$|\\&", "", x)   # drop currency symbols
+x <- gsub(",", ".", x)        # normalize decimal commas to dots
+y <- as.numeric(x)
+print(y)
+```
+
+# Outlier Detection
+
+## The Inter-Quartile Range (IQR) method
+
+A value outside the interval below is treated as an outlier:
+
+$$[Q_1 - 1.5\times IQR,\ Q_3 + 1.5\times IQR]$$
+
+where $Q_1$/$Q_3$ are the 25th/75th percentiles and $IQR = Q_3 - Q_1$.
+
+```{r fig.height=4, fig.width=5}
+x <- c(19.103, 19.632, 22.494, 20.113, 10.5, 22.744, 20.737, 17.976,
+       18.901, 192.87, 21.959, 0.001, 20.641, 20.177, 19.111, 22.859,
+       207.97, 16.853, 21.122, 19.244, 18.291, 19.651, 18.358, 18.834, 19)
+
+x_copy <- x
+boxplot(x_copy, main = "Before handling outliers")
+```
+
+```{r}
+Q <- as.numeric(quantile(x, probs = c(0.25, 0.5, 0.75)))
+d <- as.data.frame(t(Q))
+names(d) <- paste0("Q", 1:length(Q))
+d$IQR      <- d$Q3 - d$Q1
+d$LowerLim <- d$Q1 - 1.5 * d$IQR
+d$UpperLim <- d$Q3 + 1.5 * d$IQR
+d
+```
+
+Flagging every value as an outlier or not:
+```{r}
+(d_out <- data.frame(x = x, outlier = x < d$LowerLim | x > d$UpperLim))
+```
+
+Two equivalent ways to pull out just the outliers:
+```{r}
+x[d_out$outlier]                                  # using our own table
+(bxpt <- boxplot(x, range = 1.5, plot = FALSE))$out # using boxplot()'s own $out
+```
+
+## Imputing the outliers
+
+Treat outliers as missing, then fill them with the mean of everything else:
+```{r}
+x[d_out$outlier] <- NA
+x[is.na(x)] <- mean(x, na.rm = TRUE)
+```
+
+```{r fig.height=4, fig.width=7}
+par(mfrow = c(1, 2))
+boxplot(x_copy, main = "Before\nhandling outliers", cex.main = 0.8)
+boxplot(x, main = "After\nhandling outliers", col = "green", cex.main = 0.8)
+```
+
+No more outliers remain after imputation.

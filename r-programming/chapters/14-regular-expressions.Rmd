@@ -1,0 +1,95 @@
+---
+title: "14 - Regular Expressions"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+A regular expression (regex) is a pattern used to match, extract, or
+replace text. R's base functions for this all take a pattern as their
+first serious argument and a character vector to search as the second.
+
+```{r}
+text <- c("dave@example.com", "call 555-1234", "no match here", "ID: R2024-001")
+```
+
+# Detecting Matches
+
+`grepl()` returns `TRUE`/`FALSE` for each element:
+```{r}
+grepl("[0-9]+", text)
+```
+
+`grep()` returns matching positions, or the matching strings themselves
+with `value = TRUE`:
+```{r}
+grep("[0-9]+", text)
+grep("[0-9]+", text, value = TRUE)
+```
+
+# Replacing Matches
+
+`sub()` replaces only the first match per string; `gsub()` replaces all:
+```{r}
+sub("[0-9]+", "#", text)
+gsub("[0-9]+", "#", text)
+```
+
+# Extracting Matches
+
+`regexpr()` finds the *first* match's position; `regmatches()` pulls out
+the actual matched text:
+```{r}
+m <- regexpr("[0-9]+", text)
+regmatches(text, m)
+```
+
+`gregexpr()` + `regmatches()` extracts *every* match per string:
+```{r}
+mg <- gregexpr("[0-9]+", text)
+regmatches(text, mg)
+```
+
+# A Practical Pattern: Validating an Email
+
+```{r}
+grepl("^[A-Za-z]+@[A-Za-z]+\\.[a-z]+$", text)
+```
+
+# Common Building Blocks
+
+| Pattern | Matches |
+|---|---|
+| `[0-9]` or `\\d` | any digit |
+| `[a-zA-Z]` | any letter |
+| `.` | any single character |
+| `+` | one or more of the previous token |
+| `*` | zero or more of the previous token |
+| `^` / `$` | start / end of the string |
+| `\\s` | whitespace |
+| `\|` | alternation ("or") |
+
+# `stringr` Equivalents
+
+The `stringr` package (part of `tidyverse`) wraps the same regex engine in
+more consistent, pipe-friendly functions:
+```{r message=FALSE}
+library(stringr)
+str_detect(text, "[0-9]+")
+str_extract(text, "[0-9]+")
+str_extract_all(text, "[0-9]+")
+str_replace_all(text, "[0-9]+", "#")
+```
+
+For deeper coverage, see
+[DataCamp's regex in R tutorial](https://www.datacamp.com/tutorial/regex-r-regular-expressions-guide)
+or [this regex tutorial](https://jfjelstul.github.io/regular-expressions-tutorial/).

@@ -1,0 +1,66 @@
+---
+title: "16 - LaTeX in R Markdown"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+R Markdown (and Quarto) render LaTeX math directly, both inline and as
+display equations — useful for writing up the statistics behind a model
+alongside the code that fits it.
+
+# Inline Math
+
+Wrapping an expression in single dollar signs keeps it inline with text:
+the variance of a real-valued variable $X = (X_1, \ldots, X_n)$ is written
+right in the sentence like this.
+
+Source:
+```
+The variance of a real-valued variable $X = (X_1, \ldots, X_n)$ is given by:
+```
+
+# Display Math
+
+Double dollar signs (or a `$$...$$` block) center the equation on its own
+line:
+
+$$
+\text{Var}(X) =
+\left[\frac{1}{n}\sum_{i=1}^n\left(X_i-\frac{1}{n}
+\sum_{i=1}^nX_i\right)^2\right]^\frac{1}{2}
+$$
+
+Source:
+```
+$$
+\text{Var}(X) =
+\left[\frac{1}{n}\sum_{i=1}^n\left(X_i-\frac{1}{n}
+\sum_{i=1}^nX_i\right)^2\right]^\frac{1}{2}
+$$
+```
+
+# Mixing LaTeX and R
+
+Math and code can sit side by side in the same document — describe a
+function mathematically, then define and run it:
+
+$$f(x) = x^3$$
+
+```{r}
+cube <- function(x) x^3
+cube(3)
+```
+
+This is the same LaTeX engine used to render PDF output (via `tinytex`,
+set up in Chapter 0), so anything that displays correctly here will also
+render correctly in a knitted PDF.

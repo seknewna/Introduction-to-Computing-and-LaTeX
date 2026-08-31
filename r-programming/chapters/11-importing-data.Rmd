@@ -1,0 +1,107 @@
+---
+title: "11 - Importing Data in R"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+> **Note on file paths:** the original course material referenced files
+> under `./data/`. Those files aren't part of this repo, so every example
+> below either uses a built-in dataset or generates a small temp file on
+> the fly — copy the pattern and point it at your own files.
+
+# Built-in Data
+
+R ships with sample datasets ready to use, no import needed.
+```{r}
+data(iris)
+str(iris)
+summary(iris)
+ncol(iris)
+```
+
+Checking the class of every column, timed with base R (or use the `tictoc`
+package's `tic()`/`toc()` for nicer output if you have it installed):
+```{r}
+dtypes <- c()
+start <- Sys.time()
+for (i in 1:ncol(iris)) {
+  dtypes[i] <- class(iris[[i]])
+}
+print(Sys.time() - start)
+unique(dtypes)
+```
+
+Loading a dataset from a package without loading the whole package:
+```{r}
+data("spam", package = "kernlab")
+str(spam[1:5])
+```
+
+# CSV Files
+
+Three common ways to read a CSV, from least to most modern:
+
+* `read.csv()` from base R
+```{r}
+tmp <- tempfile(fileext = ".csv")
+write.csv(iris, tmp, row.names = FALSE)
+
+dta <- read.csv(tmp)
+head(dta, 3)
+```
+Notice `Species` comes back as `character` — pass `stringsAsFactors = TRUE`
+to `read.csv()` if you want it as a factor instead.
+
+* `read_csv()` from `readr` (loaded together with `tidyverse`)
+```{r message=FALSE}
+library(readr)
+dta <- read_csv(tmp)
+head(dta, 3)
+```
+Always check the messages/warnings `read_csv()` prints — they usually flag
+real issues worth fixing.
+
+* `import()` from `rio`, which auto-detects the file type
+```{r message=FALSE}
+library(rio)
+head(import(tmp), 2)
+unlink(tmp)
+```
+
+## Excel files
+
+`rio::import()` handles `.xlsx` the same way it handles CSV:
+```{r message=FALSE}
+tmp_xlsx <- tempfile(fileext = ".xlsx")
+export(head(iris, 5), tmp_xlsx)
+head(import(tmp_xlsx), 2)
+unlink(tmp_xlsx)
+```
+
+## Exercise: import every CSV in a folder with a loop
+
+```{r}
+dir.create("demo_csv", showWarnings = FALSE)
+write.csv(head(iris, 3), "demo_csv/iris_part.csv", row.names = FALSE)
+write.csv(head(mtcars, 3), "demo_csv/mtcars_part.csv", row.names = FALSE)
+
+file_names <- dir("demo_csv", pattern = "\\.csv$")
+file_names
+
+data_list <- list()
+for (f in file_names) {
+  data_list[[f]] <- read.csv(file.path("demo_csv", f))
+}
+str(data_list)
+unlink("demo_csv", recursive = TRUE)
+```

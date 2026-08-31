@@ -1,0 +1,113 @@
+---
+title: "15 - Intro to Modeling: PCA, Clustering, KNN & Regression"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+A first tour of the modeling techniques R is most commonly used for,
+building on the eigen-decomposition and linear model work from earlier
+chapters.
+
+# Principal Component Analysis
+
+Chapter 3 walked through PCA by hand: center the data, eigen-decompose its
+covariance matrix, and project onto the top eigenvectors. In practice,
+`prcomp()` does all of that for you, plus proper scaling:
+```{r}
+data(iris)
+pca <- prcomp(iris[, -5], center = TRUE, scale. = TRUE)
+summary(pca)
+```
+
+`Proportion of Variance` shows how much information each component
+captures — here the first two components already explain most of the
+spread in the data.
+```{r fig.height=4, fig.width=6}
+plot(pca$x[, 1:2], col = iris$Species, pch = 16,
+     xlab = "PC1", ylab = "PC2", main = "iris projected onto PC1/PC2")
+legend("topright", legend = levels(iris$Species),
+       col = 1:3, pch = 16, bty = "n")
+```
+
+# Clustering
+
+## K-means
+
+Partitions data into `k` groups by minimizing within-cluster distance.
+Being unsupervised, it never sees `Species` — comparing its output to the
+real labels afterward is just for evaluation.
+```{r}
+set.seed(1)
+km <- kmeans(iris[, -5], centers = 3, nstart = 10)
+table(cluster = km$cluster, species = iris$Species)
+```
+
+## Hierarchical clustering
+
+Builds a tree of nested clusters instead of a single flat partition:
+```{r fig.height=4, fig.width=7}
+d <- dist(iris[1:20, -5]) # a small subset, so the dendrogram stays readable
+hc <- hclust(d, method = "complete")
+plot(hc, main = "Hierarchical clustering (first 20 flowers)")
+
+cutree(hc, k = 3) # cut the tree into 3 groups
+```
+
+# K-Nearest Neighbor (KNN)
+
+A supervised classifier: label a new point by majority vote among its `k`
+closest neighbors in the training data.
+```{r message=FALSE}
+library(class)
+set.seed(1)
+idx <- sample(1:nrow(iris), 0.7 * nrow(iris))
+train <- iris[idx, ]
+test  <- iris[-idx, ]
+
+pred <- knn(train[, -5], test[, -5], cl = train$Species, k = 5)
+mean(pred == test$Species) # accuracy on the held-out test set
+table(predicted = pred, actual = test$Species)
+```
+
+# Simple Linear Regression
+
+Already covered in Chapter 6's simulated-data example
+(`z ~ x`, fitted with `lm()`). A quick recap on `iris`:
+```{r}
+lr <- lm(Petal.Length ~ Petal.Width, data = iris)
+coef(lr)
+```
+Each additional cm of petal width is associated with roughly
+`r round(coef(lr)[[2]], 2)` cm more petal length.
+
+# Logistic Regression
+
+For a categorical (here, binary) outcome, swap `lm()` for `glm()` with
+`family = binomial`. Predicting *virginica* vs. *versicolor* from sepal
+measurements:
+```{r}
+sub <- subset(iris, Species %in% c("versicolor", "virginica"))
+sub$is_virginica <- factor(ifelse(sub$Species == "virginica", 1, 0))
+
+logit <- glm(is_virginica ~ Sepal.Length + Sepal.Width, data = sub, family = binomial)
+summary(logit)$coefficients
+```
+
+Turning predicted probabilities into class predictions at a 0.5 threshold:
+```{r}
+pred_prob  <- predict(logit, type = "response")
+pred_class <- ifelse(pred_prob > 0.5, 1, 0)
+
+mean(pred_class == sub$is_virginica) # accuracy
+table(predicted = pred_class, actual = sub$is_virginica)
+```

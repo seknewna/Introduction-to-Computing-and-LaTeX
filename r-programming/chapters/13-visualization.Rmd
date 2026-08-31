@@ -1,0 +1,58 @@
+---
+title: "13 - Visualization: ggplot2 & plotly"
+subtitle: "Part 2: R Programming"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# `ggplot2`
+
+`ggplot2` builds plots in layers, following the "grammar of graphics."
+```{r message=FALSE, fig.height=3, fig.width=8}
+library(ggplot2)
+library(dplyr)
+
+iris %>%
+  ggplot(aes(y = Petal.Length, fill = Species)) +
+  geom_boxplot() +
+  facet_grid(~Species) +
+  theme_minimal()
+```
+
+For a full systematic introduction to `ggplot2`, see the
+[Data Visualization chapters of R for Data Science](https://r4ds.hadley.nz/data-visualize.html)
+or [this ggplot2 bookdown guide](https://bookdown.org/ozancanozdemir/introduction-to-ggplot2/).
+
+# `plotly`
+
+`plotly` turns static plots into interactive, hover-able ones:
+```{r message=FALSE, fig.height=4, fig.width=6}
+library(plotly)
+
+plot_ly(data = iris %>% count(Species),
+        labels = ~Species, values = ~n, type = "pie")
+```
+
+`ggpubr::ggpie()` gives a similar publication-ready pie chart built on
+`ggplot2`:
+```{r message=FALSE, fig.height=4, fig.width=6}
+library(ggpubr)
+
+ggpie(data = iris %>% count(Species) %>%
+        mutate(label = paste0(Species, " (", round(100 * n / sum(n), 2), "%)")),
+      x = "n", label = "label", color = "white",
+      fill = "Species", lab.pos = "in")
+```
+
+See the [plotly R docs](https://plotly.com/r/) and
+[this intro-to-DS plotting chapter](https://bookdown.org/ronsarafian/IntrotoDS/plotting.html)
+for more.
