@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Introduction to Computing — Bash, R & LaTeX</title>
+<title>Introduction to Computing and LaTeX</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
@@ -42,9 +42,17 @@
     overflow-y: auto; border-right: 1px solid var(--border);
     padding: 32px 26px 60px;
   }
-  .sidebar-brand { font-family: var(--serif); font-size: 19px; font-weight: 600; margin-bottom: 28px; }
+  .sidebar-brand { font-family: var(--serif); font-size: 19px; font-weight: 600; margin-bottom: 18px; }
   .sidebar-brand a { text-decoration: none; }
   .sidebar-brand a:hover { text-decoration: underline; }
+
+  .pdf-btn {
+    display: block; text-align: center; text-decoration: none;
+    font-family: var(--mono); font-size: 14px; font-weight: 700;
+    color: var(--ink); background: #fff; border: 1px solid var(--ink);
+    padding: 10px 14px; margin-bottom: 28px;
+  }
+  .pdf-btn:hover { background: var(--ink); color: #fff; }
 
   details.toc-group { margin-bottom: 6px; }
   details.toc-group summary {
@@ -214,7 +222,8 @@
 
 <div class="layout">
   <nav class="sidebar">
-  <div class="sidebar-brand"><a href="#top">Introduction to Computing</a></div>
+  <div class="sidebar-brand"><a href="#top">Introduction to Computing and LaTeX</a></div>
+  <a class="pdf-btn" href="./Introduction-to-Computing.pdf" download>Download PDF</a>
   <details class="toc-group" open>
     <summary class="toc-part">01 &middot; Bash</summary>
     <ul class="toc-list">
@@ -238,8 +247,8 @@
   <main class="main" id="top">
   <div class="wrap">
   <div class="hero">
-    <h1 class="page-title">A Three-Part Introduction to Computing</h1>
-    <p class="page-subtitle">From the terminal, to data, to typeset documents.</p>
+    <h1 class="page-title">Introduction to Computing and LaTeX</h1>
+    <p class="page-subtitle">Bash for the terminal, R for the data, LaTeX for the write-up.</p>
 
     <div class="clone-box">
       <div class="clone-label">Get the code</div>
