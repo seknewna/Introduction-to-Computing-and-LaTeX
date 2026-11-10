@@ -1,0 +1,80 @@
+---
+title: "MathEpi 05 - The SEIR Model"
+subtitle: "Mathematical Epidemiology Prep (R)"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.height = 4, fig.width = 7)
+```
+
+Many infections have a **latent period**: a person is infected but not yet
+infectious. The SEIR model adds an **E**xposed compartment:
+
+$$
+\frac{dS}{dt} = -\beta \frac{SI}{N}, \quad
+\frac{dE}{dt} = \beta \frac{SI}{N} - \sigma E, \quad
+\frac{dI}{dt} = \sigma E - \gamma I, \quad
+\frac{dR}{dt} = \gamma I
+$$
+
+where $\sigma = 1/(\text{latent period})$. Here we use a 5-day latent period
+($\sigma = 0.2$).
+
+```{r}
+library(deSolve)
+
+seir <- function(time, state, parms) {
+  with(as.list(c(state, parms)), {
+    dS <- -beta * S * I / N
+    dE <-  beta * S * I / N - sigma * E
+    dI <-  sigma * E - gamma * I
+    dR <-  gamma * I
+    list(c(dS, dE, dI, dR))
+  })
+}
+
+sir <- function(time, state, parms) {
+  with(as.list(c(state, parms)), {
+    dS <- -beta * S * I / N
+    dI <-  beta * S * I / N - gamma * I
+    dR <-  gamma * I
+    list(c(dS, dI, dR))
+  })
+}
+
+N <- 1000
+times <- seq(0, 200, by = 1)
+
+seir_out <- as.data.frame(ode(c(S = N - 1, E = 0, I = 1, R = 0), times, seir,
+                              c(beta = 0.5, sigma = 0.2, gamma = 0.2, N = N)))
+sir_out  <- as.data.frame(ode(c(S = N - 1, I = 1, R = 0), times, sir,
+                              c(beta = 0.5, gamma = 0.2, N = N)))
+```
+
+# SIR vs SEIR
+
+```{r}
+plot(sir_out$time, sir_out$I, type = "l", lwd = 2, col = "red",
+     xlab = "Day", ylab = "Infectious people", ylim = c(0, 350))
+lines(seir_out$time, seir_out$I, lwd = 2, col = "blue")
+legend("topright", c("SIR", "SEIR"), col = c("red", "blue"), lwd = 2)
+```
+
+```{r}
+data.frame(
+  model = c("SIR", "SEIR"),
+  peak_day = c(sir_out$time[which.max(sir_out$I)], seir_out$time[which.max(seir_out$I)]),
+  peak_infectious = round(c(max(sir_out$I), max(seir_out$I)))
+)
+```
+
+Both models have the same $R_0 = \beta/\gamma = 2.5$, so they share the same
+final size, but the latent period **delays** the epidemic and lowers the peak
+of the infectious curve.

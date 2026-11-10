@@ -1,0 +1,82 @@
+---
+title: "MathEpi 07 - Fitting a Model to Data"
+subtitle: "Mathematical Epidemiology Prep (R)"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.height = 4, fig.width = 7)
+```
+
+Models become useful when their parameters are estimated from data. Here we
+generate "observed" data from an SIR epidemic with known parameters, then
+recover the transmission rate $\beta$ by **least squares**: choose the
+$\beta$ that makes the model curve closest to the observations.
+
+# Simulate noisy observations
+
+```{r}
+library(deSolve)
+
+sir <- function(time, state, parms) {
+  with(as.list(c(state, parms)), {
+    dS <- -beta * S * I / N
+    dI <-  beta * S * I / N - gamma * I
+    dR <-  gamma * I
+    list(c(dS, dI, dR))
+  })
+}
+
+N <- 1000
+gamma <- 0.2                  # assume the infectious period is known (5 days)
+days <- 0:60
+
+model_I <- function(beta) {
+  out <- ode(c(S = N - 1, I = 1, R = 0), days, sir,
+             c(beta = beta, gamma = gamma, N = N))
+  out[, "I"]
+}
+
+set.seed(10)
+true_beta <- 0.5
+observed <- rpois(length(days), model_I(true_beta))   # Poisson observation noise
+```
+
+# Define and minimise the error
+
+```{r}
+sse <- function(beta) sum((observed - model_I(beta))^2)
+
+fit <- optimize(sse, interval = c(0.1, 1))
+beta_hat <- fit$minimum
+beta_hat                          # close to the true value 0.5
+beta_hat / gamma                  # estimated R0 (true value 2.5)
+```
+
+# Compare the fitted curve with the data
+
+```{r}
+plot(days, observed, pch = 16, xlab = "Day", ylab = "Infectious people")
+lines(days, model_I(beta_hat), col = "red", lwd = 2)
+legend("topright", c("Observed", "Fitted SIR"), pch = c(16, NA),
+       lty = c(NA, 1), col = c("black", "red"))
+```
+
+# See why it works: the error curve
+
+```{r}
+beta_grid <- seq(0.3, 0.7, by = 0.01)
+plot(beta_grid, sapply(beta_grid, sse), type = "l", lwd = 2,
+     xlab = "beta", ylab = "Sum of squared errors")
+abline(v = beta_hat, lty = 2, col = "red")
+```
+
+The error has a clear minimum near the true $\beta$. In a real analysis you
+would also estimate $\gamma$, report uncertainty, and use a likelihood
+appropriate for count data, but the logic is exactly this.

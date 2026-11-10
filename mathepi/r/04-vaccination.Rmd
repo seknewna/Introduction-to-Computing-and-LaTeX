@@ -1,0 +1,89 @@
+---
+title: "MathEpi 04 - Vaccination and Interventions"
+subtitle: "Mathematical Epidemiology Prep (R)"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.height = 4, fig.width = 7)
+```
+
+Control measures change the model's inputs. Vaccination (idealised here as
+giving full immunity) moves people straight into the R compartment before the
+outbreak, and measures like distancing reduce $\beta$.
+
+```{r}
+library(deSolve)
+
+sir <- function(time, state, parms) {
+  with(as.list(c(state, parms)), {
+    dS <- -beta * S * I / N
+    dI <-  beta * S * I / N - gamma * I
+    dR <-  gamma * I
+    list(c(dS, dI, dR))
+  })
+}
+
+# Run an epidemic where a fraction `vacc` of the population starts immune
+run_sir <- function(beta = 0.5, gamma = 0.2, N = 1000, vacc = 0, days = 200) {
+  start <- c(S = N - vacc * N - 1, I = 1, R = vacc * N)
+  as.data.frame(ode(start, seq(0, days, by = 1), sir,
+                    c(beta = beta, gamma = gamma, N = N)))
+}
+```
+
+# Compare vaccination coverage
+
+With $R_0 = 2.5$ the herd immunity threshold is $1 - 1/2.5 = 0.6$.
+
+```{r}
+coverage <- c(0, 0.3, 0.5, 0.7)
+cols <- c("black", "blue", "darkgreen", "red")
+
+plot(NULL, xlim = c(0, 200), ylim = c(0, 350),
+     xlab = "Day", ylab = "Infectious people")
+for (i in seq_along(coverage)) {
+  out <- run_sir(vacc = coverage[i])
+  lines(out$time, out$I, col = cols[i], lwd = 2)
+}
+legend("topright", paste0(coverage * 100, "% vaccinated"), col = cols, lwd = 2)
+```
+
+At 70% coverage (above the 60% threshold) the single introduced case cannot
+start an epidemic.
+
+# How many people are infected at each coverage level?
+
+```{r}
+infected_by_coverage <- function(p) {
+  out <- run_sir(vacc = p)
+  tail(out$R, 1) - p * 1000          # recovered minus those vaccinated
+}
+
+p_grid <- seq(0, 0.9, by = 0.05)
+total_infected <- sapply(p_grid, infected_by_coverage)
+
+plot(p_grid, total_infected, type = "b", pch = 16,
+     xlab = "Vaccination coverage", ylab = "People infected (of 1000)")
+abline(v = 0.6, lty = 2)
+```
+
+# Reducing transmission instead
+
+A 40% cut in contacts lowers $\beta$ from 0.5 to 0.3, so $R_0$ falls from 2.5
+to 1.5:
+
+```{r}
+base  <- run_sir(beta = 0.5)
+cut40 <- run_sir(beta = 0.3)
+c(peak_baseline = round(max(base$I)), peak_with_distancing = round(max(cut40$I)))
+```
+
+Distancing flattens and delays the peak even when it does not stop the
+epidemic.

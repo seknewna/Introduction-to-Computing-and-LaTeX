@@ -1,0 +1,81 @@
+---
+title: "MathEpi 00 - Toolkit: R and Python Side by Side"
+subtitle: "Mathematical Epidemiology Prep (R)"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.height = 4, fig.width = 7)
+```
+
+Models in epidemiology are built from a handful of numbers (rates, populations,
+time steps) and a handful of operations (functions, loops, plots). This
+chapter shows the basic R tools you will use, and, in the Python version of
+this chapter, the same tools in Python.
+
+# One idea to practice with: the basic reproduction number
+
+The basic reproduction number $R_0$ is the average number of people one
+infectious person infects in a fully susceptible population. In the simplest
+model
+
+$$R_0 = \frac{\beta}{\gamma}$$
+
+where $\beta$ is the transmission rate (per day) and $\gamma$ is the recovery
+rate (per day), so $1/\gamma$ is the average infectious period.
+
+```{r}
+r0 <- function(beta, gamma) beta / gamma
+
+r0(beta = 0.5, gamma = 0.2)   # 2.5: one case infects 2.5 others on average
+```
+
+# Vectors and loops
+
+```{r}
+betas <- c(0.2, 0.4, 0.6, 0.8)
+gamma <- 0.25
+
+for (b in betas) {
+  cat("beta =", b, " -> R0 =", r0(b, gamma), "\n")
+}
+
+r0(betas, gamma)              # functions work on whole vectors at once
+```
+
+# A data frame of scenarios
+
+```{r}
+scenarios <- data.frame(beta = betas, gamma = gamma)
+scenarios$R0 <- r0(scenarios$beta, scenarios$gamma)
+scenarios$can_spread <- scenarios$R0 > 1   # an outbreak needs R0 > 1
+scenarios
+```
+
+# A first plot
+
+```{r}
+plot(betas, r0(betas, gamma), type = "b", pch = 16,
+     xlab = "Transmission rate (beta)", ylab = "R0",
+     main = "R0 grows with the transmission rate")
+abline(h = 1, lty = 2)          # the threshold R0 = 1
+```
+
+# R and Python cheat sheet
+
+| Task | R | Python (numpy) |
+|---|---|---|
+| A vector / array | `c(1, 2, 3)` | `np.array([1, 2, 3])` |
+| Sequence | `seq(0, 1, by = 0.1)` | `np.arange(0, 1.01, 0.1)` or `np.linspace(0, 1, 11)` |
+| Length | `length(x)` | `len(x)` |
+| First element | `x[1]` | `x[0]` (Python counts from 0) |
+| Loop | `for (i in 1:3) { ... }` | `for i in range(3): ...` |
+| Function | `f <- function(x) x^2` | `def f(x): return x**2` |
+| Power | `x^2` | `x**2` |
+| Plot | `plot(x, y)` | `plt.plot(x, y)` |

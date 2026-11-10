@@ -1,0 +1,72 @@
+---
+title: "MathEpi 02 - The SIR Model"
+subtitle: "Mathematical Epidemiology Prep (R)"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.height = 4, fig.width = 7)
+```
+
+The SIR model splits a population of size $N$ into three compartments:
+**S**usceptible, **I**nfectious, and **R**ecovered (or removed).
+
+$$
+\frac{dS}{dt} = -\beta \frac{S I}{N}, \qquad
+\frac{dI}{dt} = \beta \frac{S I}{N} - \gamma I, \qquad
+\frac{dR}{dt} = \gamma I
+$$
+
+Susceptibles become infectious at rate $\beta S I / N$; infectious people
+recover at rate $\gamma$. The three equations add up to zero, so the total
+population $N$ is constant.
+
+# Solve it numerically with `deSolve`
+
+```{r}
+library(deSolve)
+
+sir <- function(time, state, parms) {
+  with(as.list(c(state, parms)), {
+    dS <- -beta * S * I / N
+    dI <-  beta * S * I / N - gamma * I
+    dR <-  gamma * I
+    list(c(dS, dI, dR))
+  })
+}
+
+N     <- 1000
+init  <- c(S = N - 1, I = 1, R = 0)
+parms <- c(beta = 0.5, gamma = 0.2, N = N)
+times <- seq(0, 120, by = 1)
+
+out <- as.data.frame(ode(y = init, times = times, func = sir, parms = parms))
+head(out)
+```
+
+# Plot the epidemic
+
+```{r}
+matplot(out$time, out[, c("S", "I", "R")], type = "l", lty = 1, lwd = 2,
+        col = c("blue", "red", "darkgreen"),
+        xlab = "Day", ylab = "People", main = "SIR epidemic")
+legend("right", c("S", "I", "R"), col = c("blue", "red", "darkgreen"), lty = 1, lwd = 2)
+```
+
+# Read off the key numbers
+
+```{r}
+peak_I   <- max(out$I)
+peak_day <- out$time[which.max(out$I)]
+c(peak_infectious = round(peak_I), peak_day = peak_day,
+  total_ever_infected = round(max(out$R)))
+```
+
+The epidemic rises, peaks when $S/N = 1/R_0$, and then burns out, leaving
+some people who were never infected.

@@ -1,0 +1,62 @@
+---
+title: "MathEpi 01 - Exponential Growth and Doubling Time"
+subtitle: "Mathematical Epidemiology Prep (R)"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.height = 4, fig.width = 7)
+```
+
+At the start of an outbreak, almost everyone is susceptible, so cases grow
+roughly exponentially:
+
+$$I(t) \approx I_0\, e^{rt}$$
+
+The growth rate $r$ can be estimated from data, and from it the
+**doubling time** $T_d = \ln(2)/r$.
+
+# Simulate daily case counts
+
+We pretend the true growth rate is $r = 0.15$ per day, starting from 5 cases,
+and add Poisson noise because real counts are never perfectly smooth.
+
+```{r}
+set.seed(1)
+r_true <- 0.15
+day <- 0:29
+cases <- rpois(length(day), lambda = 5 * exp(r_true * day))
+data <- data.frame(day, cases)
+head(data)
+```
+
+# Estimate the growth rate
+
+Taking logs turns the exponential curve into a straight line:
+$\log I(t) = \log I_0 + r\,t$. So a linear regression of `log(cases)` on `day`
+estimates $r$ as the slope.
+
+```{r}
+fit <- lm(log(cases) ~ day, data = data)
+r_hat <- unname(coef(fit)["day"])
+r_hat                       # close to the true value 0.15
+log(2) / r_hat              # estimated doubling time in days
+log(2) / r_true             # true doubling time
+```
+
+# Plot data and fit on a log scale
+
+```{r}
+plot(day, cases, log = "y", pch = 16,
+     xlab = "Day", ylab = "Daily cases (log scale)")
+lines(day, exp(predict(fit)), col = "red", lwd = 2)
+```
+
+On a log scale, exponential growth is a straight line. Real outbreaks leave
+this straight line once susceptibles are depleted or control measures start.

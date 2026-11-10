@@ -1,0 +1,92 @@
+---
+title: "MathEpi 03 - R0, Herd Immunity and Final Size"
+subtitle: "Mathematical Epidemiology Prep (R)"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.height = 4, fig.width = 7)
+```
+
+Three quantities summarise most of what the SIR model says about an outbreak.
+
+* **Basic reproduction number:** $R_0 = \beta/\gamma$. An outbreak can take
+  off only if $R_0 > 1$.
+* **Herd immunity threshold:** the fraction of the population that must be
+  immune so that $R_0 \times (\text{fraction susceptible}) \le 1$, i.e.
+  $1 - 1/R_0$.
+* **Final size:** the fraction $z$ of the population ever infected, which
+  solves $z = 1 - e^{-R_0 z}$ (when almost everyone starts susceptible).
+
+```{r}
+beta <- 0.5
+gamma <- 0.2
+R0 <- beta / gamma
+herd_immunity <- 1 - 1 / R0
+c(R0 = R0, herd_immunity_threshold = herd_immunity)
+```
+
+# Solving for the final size
+
+The final-size equation has no closed-form solution, so we find its root
+numerically with `uniroot()`.
+
+```{r}
+final_size <- function(R0) {
+  if (R0 <= 1) return(0)                       # no major outbreak
+  uniroot(function(z) z - (1 - exp(-R0 * z)),
+          lower = 1e-6, upper = 1)$root
+}
+
+final_size(R0)
+```
+
+# Check against the simulated epidemic
+
+```{r}
+library(deSolve)
+sir <- function(time, state, parms) {
+  with(as.list(c(state, parms)), {
+    dS <- -beta * S * I / N
+    dI <-  beta * S * I / N - gamma * I
+    dR <-  gamma * I
+    list(c(dS, dI, dR))
+  })
+}
+N <- 1000
+out <- as.data.frame(ode(c(S = N - 1, I = 1, R = 0), seq(0, 300, by = 1),
+                         sir, c(beta = beta, gamma = gamma, N = N)))
+tail(out$R, 1) / N            # fraction ever infected in the simulation
+```
+
+The simulation and the equation agree.
+
+# How the final size depends on R0
+
+```{r}
+R0_values <- c(1.2, 1.5, 2, 2.5, 3, 4)
+table_out <- data.frame(
+  R0 = R0_values,
+  herd_immunity = round(1 - 1 / R0_values, 3),
+  final_size = round(sapply(R0_values, final_size), 3)
+)
+table_out
+```
+
+```{r}
+curve_R0 <- seq(1.05, 5, by = 0.05)
+plot(curve_R0, sapply(curve_R0, final_size), type = "l", lwd = 2,
+     xlab = "R0", ylab = "Fraction ever infected",
+     main = "Final epidemic size")
+lines(curve_R0, 1 - 1 / curve_R0, lty = 2)
+legend("bottomright", c("Final size", "Herd immunity threshold"), lty = c(1, 2))
+```
+
+Notice that the final size is always larger than the herd immunity threshold:
+the epidemic overshoots because infections continue while $I$ is still large.

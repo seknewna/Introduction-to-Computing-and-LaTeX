@@ -1,0 +1,78 @@
+---
+title: "MathEpi 06 - Stochastic Epidemics (Reed-Frost)"
+subtitle: "Mathematical Epidemiology Prep (R)"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.height = 4, fig.width = 7)
+```
+
+Differential equations describe the average behaviour of a big population.
+When only a few people are infected, chance matters: a single case may infect
+nobody and the outbreak dies out immediately.
+
+The **Reed-Frost** chain-binomial model captures this in discrete generations.
+If $I_t$ people are infectious and each pair of people has probability $p$ of
+a transmitting contact, a susceptible escapes infection with probability
+$(1-p)^{I_t}$. So
+
+$$ I_{t+1} \sim \text{Binomial}\big(S_t,\; 1 - (1-p)^{I_t}\big). $$
+
+```{r}
+reed_frost <- function(N = 200, I0 = 1, p = 0.01) {
+  S <- N - I0
+  I <- I0
+  total <- I0
+  while (I > 0) {
+    new_I <- rbinom(1, S, 1 - (1 - p)^I)
+    S <- S - new_I
+    total <- total + new_I
+    I <- new_I
+  }
+  total                             # total number ever infected
+}
+
+N <- 200; p <- 0.01
+R0 <- (N - 1) * p                   # about 2
+R0
+```
+
+# Run many outbreaks
+
+```{r}
+set.seed(42)
+sizes <- replicate(500, reed_frost(N = N, p = p))
+
+hist(sizes, breaks = 30, col = "grey80",
+     xlab = "Total infected (out of 200)", main = "500 simulated outbreaks")
+```
+
+The histogram is **bimodal**: many outbreaks fizzle out early (minor
+outbreaks), while others take off and infect a large part of the population
+(major outbreaks).
+
+# Probability of a minor outbreak
+
+```{r}
+mean(sizes < 20)                    # fraction of outbreaks that fizzled
+```
+
+Early in an outbreak, the number of new cases from each case behaves like a
+branching process. The probability $q$ that it dies out solves
+$q = e^{R_0 (q-1)}$:
+
+```{r}
+q <- uniroot(function(q) q - exp(R0 * (q - 1)), c(0, 0.999))$root
+q                                   # theory
+```
+
+Even with $R_0 \approx 2$, roughly one introduction in five goes nowhere. The
+deterministic SIR model cannot show this, which is why stochastic models are
+important for small populations and early outbreaks.
