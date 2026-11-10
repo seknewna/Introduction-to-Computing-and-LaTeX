@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Introduction to Computing and LaTeX</title>
+<title>Introduction to Computing (R &amp; Python) and LaTeX</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
@@ -106,16 +106,16 @@
   html.js .course .home.current, html.js .course .lesson.current { display: block; }
 
   /* ---------- Dashboard ---------- */
-  .dash-hero { padding: 64px 0 40px; animation: rise .6s ease-out; display: flex; align-items: flex-end; justify-content: space-between; }
-  .dash-hero-text { flex: 1 1 auto; min-width: 0; }
+  .dash-hero { padding: 64px 0 40px; animation: rise .6s ease-out; }
+  .dash-hero-text { margin-bottom: 36px; }
   @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .dash-hero { animation: none; } }
   h1.page-title {
     font-family: var(--serif); font-weight: 600; font-size: 64px; line-height: 1.05;
-    margin: 0 0 18px; letter-spacing: -0.5px; max-width: 16ch;
+    margin: 0 0 18px; letter-spacing: -0.5px; max-width: 28ch;
   }
   .page-subtitle { font-family: var(--serif); font-style: italic; font-size: 24px; line-height: 1.5; max-width: 38ch; margin: 0; }
-  .overall { margin-left: 48px; flex: 0 0 420px; border: 1px solid var(--border); padding: 18px 22px 16px; margin-bottom: 8px; }
+  .overall { max-width: 560px; border: 1px solid var(--border); padding: 18px 22px 16px; }
   .overall-label { font-family: var(--mono); font-size: 13px; font-weight: 700; margin: 0; }
   .section-title { font-family: var(--serif); font-size: 32px; font-weight: 600; margin: 56px 0 24px; }
 
@@ -296,7 +296,7 @@
   <div class="lms-header-inner">
     <a class="brand" href="#/">
       <span class="logo logo-aims brand-logo" role="img" aria-label="AIMS"></span>
-      <span class="brand-text"><span class="en" lang="en">Introduction to Computing and LaTeX</span><span class="fr" lang="fr">Introduction à l’informatique et à LaTeX</span></span>
+      <span class="brand-text"><span class="en" lang="en">Introduction to Computing (R&nbsp;&amp;&nbsp;Python) and LaTeX</span><span class="fr" lang="fr">Introduction à l’informatique (R&nbsp;et&nbsp;Python) et à LaTeX</span></span>
     </a>
     <div class="header-tools">
       <div class="lang-switch" role="group" aria-label="Language / Langue">
@@ -313,8 +313,8 @@
   <div class="wrap">
     <div class="dash-hero">
       <div class="dash-hero-text">
-        <h1 class="page-title"><span class="en" lang="en">Introduction to Computing and LaTeX</span><span class="fr" lang="fr">Introduction à l’informatique et à LaTeX</span></h1>
-        <p class="page-subtitle"><span class="en" lang="en">Bash for the terminal, R for the data, LaTeX for the write-up.</span><span class="fr" lang="fr">Bash pour le terminal, R pour les données, LaTeX pour la rédaction.</span></p>
+        <h1 class="page-title"><span class="en" lang="en">Introduction to Computing (R&nbsp;&amp;&nbsp;Python) and LaTeX</span><span class="fr" lang="fr">Introduction à l’informatique (R&nbsp;et&nbsp;Python) et à LaTeX</span></h1>
+        <p class="page-subtitle"><span class="en" lang="en">Command-line skills, data analysis in R and Python, and professional documents in LaTeX.</span><span class="fr" lang="fr">Compétences en ligne de commande, analyse de données avec R et Python, et documents professionnels avec LaTeX.</span></p>
       </div>
       <div class="overall">
         <p class="overall-label"><span class="en" lang="en">Your progress</span><span class="fr" lang="fr">Votre progression</span></p>
@@ -8149,7 +8149,7 @@ plt.show()
   function $$(sel, ctx) { return (ctx || document).querySelectorAll(sel); }
 
   /* ------------------------------------------------------------ language */
-  var TITLES = { en: 'Introduction to Computing and LaTeX', fr: 'Introduction \u00e0 l\u2019informatique et \u00e0 LaTeX' };
+  var TITLES = { en: 'Introduction to Computing (R & Python) and LaTeX', fr: 'Introduction \u00e0 l\u2019informatique (R et Python) et \u00e0 LaTeX' };
   var PDFS = { en: './Introduction-to-Computing-EN.pdf', fr: './Introduction-to-Computing-FR.pdf' };
 
   function applyLang(lang) {
